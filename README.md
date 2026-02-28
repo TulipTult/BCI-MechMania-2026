@@ -1,7 +1,7 @@
 # BCI-Robotics-Mechmania
 
 <p align="center">
-  <img src="/BCIRoboticsIcon.PNG" alt="BCI Robotics Logo" width="750" height="300">
+  <img src="/images/BCIRoboticsIcon.PNG" alt="BCI Robotics Logo" width="750" height="300">
 </p>
 
 <p align="center">
