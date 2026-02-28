@@ -12,8 +12,8 @@
   <a href="#Sharpshooter">Sharpeshooter</a> •
   <a href="Tree Planting">Tree Planting</a> •
   <a href="#development">Development</a> •
-  <a href="Authors / Team">Team</a>
-  <a href="#license">License</a>
+  <a href="#Authors / Team">Team</a> •
+  <a href="#License">License</a>
 </p>
 
 # Sharpshooter
