@@ -28,6 +28,7 @@
 - v0 - unfinished
   
 # Team
+- Allen Zhu(Adrian Newey the goat)
 - [Ashton Grant](https://github.com/TulipTult)
 - [Kevin Han](https://github.com/kevdakat123)
 - Goldygo Yany (him)
