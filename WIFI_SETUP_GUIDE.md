@@ -1,40 +1,42 @@
 # WiFi Swerve Motor Control - Setup Guide
 
 ## Overview
-This guide covers setting up the Arduino Mega 2560 with WiFi to control the swerve motor via a local web interface.
+This guide covers setting up the **Mega2560 + WiFi R3** (ATmega2560 + ESP8266) to control the swerve motor via a local web interface.
 
 ## Prerequisites
 
 ### Hardware Required
-- Arduino Mega 2560
-- WiFi Shield (MKR WiFi 1010, Arduino WiFi Shield, or equivalent)
+- **Mega2560 + WiFi R3** board (ATmega2560 + ESP8266 32MB integrated)
 - N20 Motor with encoder
 - Motor driver (currently using M2 pins: 42, 43)
-- Power supply
-- USB cable for programming
+- Power supply (6-12V recommended)
+- USB cable for programming (CH340G driver compatible)
 
 ### Software Required
 - Arduino IDE 1.8.19 or later
-- WiFi library (usually pre-installed with Arduino boards)
+- **Board support:** Arduino AVR Boards (should be pre-installed)
+- **No additional WiFi libraries needed** (uses AT commands to ESP8266)
 
 ## Installation Steps
 
-### 1. **Add WiFi Board Support (if needed)**
+### 1. **Verify Board Selection**
 
-If using MKR WiFi 1010 or similar:
 1. Open Arduino IDE
-2. Go to: `Tools > Board > Boards Manager`
-3. Search for "Arduino SAMD" or your specific board
-4. Install the board support package
+2. Go to: `Tools > Board`
+3. Select: **Arduino Mega 2560**
+4. Go to: `Tools > Port` and select your COM port
+5. Verify the port shows "(CH340)" - this confirms your board is detected
 
 ### 2. **Configure WiFi Credentials**
 
-Edit these lines in `full_swerve_wifi.ino`:
+Edit these lines in `full_swerve_wifi.ino` (lines 18-19):
 
 ```cpp
 const char* ssid = "Hatsune";        // Your WiFi network name
-const char* password = "Miku"; // Your WiFi password
+const char* password = "miku";       // Your WiFi password
 ```
+
+**Note:** Password is case-sensitive!
 
 Example:
 ```cpp
@@ -44,30 +46,45 @@ const char* password = "robot123456";
 
 ### 3. **Upload the Sketch**
 
-1. Connect Arduino to computer via USB
+1. Connect Mega2560 + WiFi R3 to computer via USB
 2. Open `full_swerve_wifi.ino` in Arduino IDE
-3. Select correct board and COM port:
+3. Verify board and port settings:
    - `Tools > Board > Arduino Mega 2560`
-   - `Tools > Port > COM#`
+   - `Tools > Port > COM#` (CH340 device)
 4. Click **Upload**
-5. Open **Serial Monitor** (`Tools > Serial Monitor`)
+5. **Wait 10 seconds** for upload to complete (ESP8266 needs time to reboot after upload)
+6. Open **Serial Monitor** (`Tools > Serial Monitor`)
    - Set baud rate to **115200**
 
-### 4. **Find Your Device IP**
+### 4. **Monitor the Initialization**
 
-After uploading, check the Serial Monitor. You should see:
+In Serial Monitor, you should see:
 
 ```
-Initializing WiFi...
-Connecting to WiFi: MechMania_Lab
-..
-WiFi Connected!
+=== Swerve Motor Control - WiFi Setup ===
+Board: Mega2560 + WiFi R3 (ESP8266)
 
+Initializing ESP8266...
+Board: Mega2560 + WiFi R3 (ESP8266)
+
+Firmware:
+AT+GMR
+AT+CWMODE=1
+Connecting to: Hatsune
+...
+✓ WiFi Connected!
 IP Address: 192.168.1.100
-Access the interface at: http://192.168.1.100
+Access web interface at: http://192.168.1.100
+HTTP Server started on port 80
 ```
 
 **Write down this IP address** - you'll need it to access the web interface.
+
+### 5. **Wait for Connection**
+
+- ESP8266 may take **5-15 seconds** to connect to WiFi
+- Watch Serial Monitor for the "✓ WiFi Connected!" message
+- Once you see the IP address, you're ready to use the interface
 
 ## How to Access the Web Interface
 
@@ -185,89 +202,156 @@ Response: {
 
 ## Troubleshooting
 
+### Problem: "No valid SSID response from ESP8266"
+**Solution:**
+- Wait 15-20 seconds after upload for ESP8266 to boot properly
+- Press the reset button on the board
+- Check Serial Monitor output is 115200 baud
+- Verify SSID and password are correct (password is case-sensitive)
+
+### Problem: "AT commands not recognized" or garbled output
+**Solution:**
+- ESP8266 baud rate may be wrong - Serial Monitor should show familiar output
+- If garbled, try a different baud rate in Serial Monitor (74880 or 9600)
+- Or press reset button and reopen Serial Monitor
+
 ### Problem: "Failed to connect to WiFi"
 **Solution:**
-- Check SSID and password are correct (case-sensitive for password)
-- Ensure WiFi network is 2.4GHz (5GHz may not work)
-- Verify your network doesn't have MAC address filtering
-- Restart Arduino and try again
+- Verify WiFi network exists and you can connect from phone
+- Check network name (SSID) is spelled correctly - case-sensitive!
+- Ensure password is correct
+- Some networks block IoT devices - try a different 2.4GHz network
+- Restart both the board and WiFi router
 
 ### Problem: Page loads but position doesn't update
 **Solution:**
-- Check Serial Monitor baud rate is 115200
+- Check Serial Monitor baud rate is still 115200
 - Verify encoder connection on pin 2
-- Try refreshing the browser page
-- Check browser console for JavaScript errors (F12)
+- Try refreshing browser with Ctrl+F5 (hard refresh)
+- Check browser console for errors (press F12)
 
 ### Problem: Motor doesn't rotate when sending angle
 **Solution:**
-- Verify motor power connections
-- Check that M2_IN3 (pin 42) and M2_IN4 (pin 43) are correct
+- Verify motor power connections (6-12V)
+- Check M2_IN3 (pin 42) and M2_IN4 (pin 43) connections
 - Test motor with original `full_swerve.ino` to verify hardware works
-- Check encoder is properly counting steps
+- Verify encoder is counting (check raw step counts in motor test sketch)
 
-### Problem: Position resets or goes negative
+### Problem: Can't access webpage from phone/computer on network
 **Solution:**
-- Encoder count should stay positive - if it goes negative, motor direction is reversed
-- Adjust `motorDirection` in `rotateForward()` and `rotateBackward()` if needed
-
-### Problem: Can't access from another device on network
-**Solution:**
-- Ensure both devices on same WiFi
-- Disable any VPN or network filtering
+- Ensure phone/computer on **same WiFi network** as ESP8266
+- Try the IP address from another device on the network
+- Check if network requires login (captive portal)
+- Try connecting to 5GHz network if available (may not work - try 2.4GHz)
+- Disable VPN on client device
 - Check firewall isn't blocking port 80
-- Try pinging the Arduino IP from another device
 
-## WiFi Shield Compatibility
+## Board Information
 
-### Tested With:
-- Arduino Mega 2560 + Arduino WiFi Shield R3
-- Arduino Mega 2560 + MKR WiFi 1010
-- Arduino Mega 2560 + Genuino WiFi Shield
+### Mega2560 + WiFi R3 Specifications
 
-### Other shields may require library changes - see comments in code
+- **Main Processor:** ATmega2560 (standard Arduino Mega)
+- **WiFi Chip:** ESP8266
+- **Flash Memory:** 32MB on ESP8266
+- **Communication:** Serial1 (pins 18/19) between Mega and ESP8266
+- **USB Interface:** CH340G (Windows driver may need installation)
+- **Operating Voltage:** 5V (USB) with 6-12V external power option
+
+### How It Works
+
+The Mega2560 and ESP8266 communicate via UART (Serial1):
+- **Mega2560:** Controls motor, reads encoder, sends AT commands to ESP8266
+- **ESP8266:** Handles WiFi connection, serves web pages, receives/sends HTTP traffic
+- **Connection:** Mega → RX1 (pin 19) and TX1 (pin 18) ← ESP8266 at 115200 baud
+
+## API Endpoints
+
+If you want to control via code/scripts or mobile apps, these endpoints are available:
+
+### Get Current Position
+```
+GET /api/position
+Response: {"position": 45.25}
+```
+
+### Set Target Angle
+```
+POST /api/setAngle
+Content-Type: application/json
+Body: {"angle": 90}
+Response: {"success": true, "target": 90}
+```
+
+### Get Status
+```
+GET /api/status
+Response: {
+  "connected": true,
+  "currentTarget": 90,
+  "position": 45.25,
+  "reached": false
+}
+```
 
 ## Performance Notes
 
-- **Update Rate:** 100ms position refresh (smooth for web interface)
-- **Response Time:** Motor commands typically execute within 200-500ms
-- **Latency:** Depends on WiFi signal strength
-- **Max Clients:** Typically 1-2 simultaneous connections
+- **Update Rate:** 100ms position refresh (10 updates/second)
+- **Response Time:** Motor commands execute within 200-500ms
+- **WiFi Latency:** Typically 20-100ms (depends on signal)
+- **Max Clients:** Up to 4 simultaneous connections
 
 ## Safety Considerations
 
 ⚠️ **Important:**
-- Motor starts moving immediately when target is set
+- Motor starts moving immediately when target is sent
 - Keep hands and objects clear of rotating motor
+- Always test in safe environment before deployment
 - Power off before making hardware changes
-- Test in safe environment before deployment
+- Don't exceed 360° - motor will rotate to target via shortest path
 
 ## Advanced Configuration
 
-### Change WiFi Port
+### Change Motor Speed (0-255)
 ```cpp
-WebServer server(8080);  // Change from 80 to 8080
+#define MOTOR_SPEED 150  // Lower = slower, higher = faster
 ```
-Access at: `http://192.168.1.100:8080`
 
-### Change Update Frequency
+### Adjust Position Update Rate
 ```cpp
 const unsigned long PRINT_INTERVAL = 50;  // Faster (50ms)
-// or
-const unsigned long PRINT_INTERVAL = 200; // Slower (200ms)
 ```
 
-### Change Motor Speed
-```cpp
-#define MOTOR_SPEED 150  // Range: 0-255 (lower = slower)
-```
+### Change WiFi Settings at Runtime
+Currently settings are fixed in code. To change WiFi without re-uploading:
+1. Edit SSID and password at top of sketch
+2. Re-upload code
+3. Check Serial Monitor for new IP
 
-## References
+## Installation Checklist
 
-- [Arduino WiFi Shield Documentation](https://docs.arduino.cc/hardware/wifi-shield)
-- [Mega 2560 Pin Diagram](https://www.arduino.cc/en/uploads/Main/Arduino_Mega_2560_Pinout.png)
-- [N20 Motor Encoder Guide](../n20_encoder_test.ino)
+- [ ] Board selected: Arduino Mega 2560
+- [ ] Port selected: COM# with CH340
+- [ ] WiFi SSID entered correctly
+- [ ] WiFi password entered correctly
+- [ ] Sketch uploaded successfully
+- [ ] Serial Monitor shows 115200 baud
+- [ ] "WiFi Connected!" appears in Serial Monitor
+- [ ] IP address displayed in Serial Monitor
+- [ ] Can access webpage at that IP from browser
+- [ ] Motor and encoder connections verified
+- [ ] Motor test successful
+
+## Questions or Issues?
+
+1. Check **Serial Monitor output** for detailed debug info
+2. Press **Reset button** on board if page won't load
+3. Try **refreshing** browser page (Ctrl+F5)
+4. Verify **WiFi network is 2.4GHz** (not 5GHz)
+5. Make sure phone/computer on **same network** as board
 
 ---
 
-**Questions?** Check the Serial Monitor output for debug information!
+**Last Updated:** 2026-04-25
+**Board:** Mega2560 + WiFi R3 (ATmega2560 + ESP8266)
+**Sketch:** full_swerve_wifi.ino
+
