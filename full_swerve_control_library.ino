@@ -6,6 +6,9 @@
   - SMR (rotation control)
   - SMP (power control)
   - SWRV (hybrid drive + steer)
+  "Note: This is a simplified example for demonstration purposes. In a real implementation, you would likely want to add PID control for the steering, handle edge cases, and implement more complex drive patterns."
+  we don't know PID so we kinda just wing it
+
 */
 
 // MOTOR PINS (MOBILITY)
@@ -105,21 +108,92 @@ void STOP_DRIVE() {
 void SMR_L(long steps) {
   encoderCount_L = 0;
   target_L = steps;
+
+  if (steps == 0) {
+    analogWrite(N1AL, 0);
+    analogWrite(N1BL, 0);
+    steerActive_L = false;
+    return;
+  }
+
   steerActive_L = true;
 
-  // CCW example
-  analogWrite(N1AL, 0);
-  analogWrite(N1BL, 200);
+  if (steps > 0) {
+    // CCW example
+    analogWrite(N1AL, 0);
+    analogWrite(N1BL, 200);
+  } else {
+    // CW example
+    analogWrite(N1AL, 200);
+    analogWrite(N1BL, 0);
+  }
 }
 
 void SMR_R(long steps) {
   encoderCount_R = 0;
   target_R = steps;
+
+  if (steps == 0) {
+    analogWrite(N2AL, 0);
+    analogWrite(N2BL, 0);
+    steerActive_R = false;
+    return;
+  }
+
   steerActive_R = true;
 
-  // CW example
-  analogWrite(N2AL, 200);
-  analogWrite(N2BL, 0);
+  if (steps > 0) {
+    // CW example
+    analogWrite(N2AL, 200);
+    analogWrite(N2BL, 0);
+  } else {
+    // CCW example
+    analogWrite(N2AL, 0);
+    analogWrite(N2BL, 200);
+  }
+}
+
+// =====================================================
+// N20 ANGLE HELPERS (2048 steps per revolution)
+// =====================================================
+long degreesToSteps(float degrees) {
+  const float stepsPerRev = 2048.0;
+  return (long)(degrees * (stepsPerRev / 360.0));
+}
+
+float getSteerDegreesFromCount(long count) {
+  const long stepsPerRev = 2048;
+  long steps = count % stepsPerRev;
+  if (steps < 0) steps += stepsPerRev;
+  return steps * (360.0 / stepsPerRev);
+}
+
+float getSteerDegrees_L() {
+  return getSteerDegreesFromCount(encoderCount_L);
+}
+
+float getSteerDegrees_R() {
+  return getSteerDegreesFromCount(encoderCount_R);
+}
+
+float shortestDeltaDegrees(float targetDeg, float currentDeg) {
+  float delta = targetDeg - currentDeg;
+  while (delta > 180.0) delta -= 360.0;
+  while (delta <= -180.0) delta += 360.0;
+  return delta;
+}
+
+// Start steering to an absolute angle (0-360)
+void SMR_L_deg(float targetDegrees) {
+  float current = getSteerDegrees_L();
+  float delta = shortestDeltaDegrees(targetDegrees, current);
+  SMR_L(degreesToSteps(delta));
+}
+
+void SMR_R_deg(float targetDegrees) {
+  float current = getSteerDegrees_R();
+  float delta = shortestDeltaDegrees(targetDegrees, current);
+  SMR_R(degreesToSteps(delta));
 }
 
 // =====================================================
@@ -127,13 +201,17 @@ void SMR_R(long steps) {
 // =====================================================
 void updateSteering() {
 
-  if (steerActive_L && encoderCount_L >= target_L) {
+  if (steerActive_L &&
+      ((target_L >= 0 && encoderCount_L >= target_L) ||
+       (target_L < 0 && encoderCount_L <= target_L))) {
     analogWrite(N1AL, 0);
     analogWrite(N1BL, 0);
     steerActive_L = false;
   }
 
-  if (steerActive_R && encoderCount_R >= target_R) {
+  if (steerActive_R &&
+      ((target_R >= 0 && encoderCount_R >= target_R) ||
+       (target_R < 0 && encoderCount_R <= target_R))) {
     analogWrite(N2AL, 0);
     analogWrite(N2BL, 0);
     steerActive_R = false;

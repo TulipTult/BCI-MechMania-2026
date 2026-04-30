@@ -28,10 +28,9 @@
 - v0 - unfinished
   
 # Team
-- Allen Zhu(Adrian Newey the goat)
+- [Allen Zhu(Adrian Newey the goat)](https://github.com/wcadmiral)
 - [Ashton Grant](https://github.com/TulipTult)
-- [Kevin Han](https://github.com/kevdakat123)
-- Goldygo Yany (him)
+- [Goldygo Yany (him)](https://github.com/cybertaco360)
   
 ## License
 
