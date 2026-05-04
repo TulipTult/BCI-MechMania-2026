@@ -31,6 +31,7 @@
 - [Allen Zhu(Adrian Newey the goat)](https://github.com/wcadmiral)
 - [Ashton Grant](https://github.com/TulipTult)
 - [Goldygo Yany (him)](https://github.com/cybertaco360)
+- [Bohdan Krutenko](https://github.com/zwcxq)
   
 ## License
 
