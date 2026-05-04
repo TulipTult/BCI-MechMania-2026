@@ -29,3 +29,18 @@ String deviceIP = "";
 #define DEADBAND_STEPS   2
 #define MOTOR_SPEED      180
 
+volatile long encoderCount = 0;
+volatile int motorDirection = 0;
+
+unsigned long lastPrintTime = 0;
+const unsigned long PRINT_INTERVAL = 100;
+
+bool targetReached = false;
+float currentTarget = 360.0;
+bool wifiConnected = false;
+
+void encoderA() {
+  encoderCount += motorDirection;
+}
+
+
